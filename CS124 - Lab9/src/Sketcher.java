@@ -8,6 +8,7 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.TilePane;
 import javafx.scene.paint.Color;
@@ -21,9 +22,12 @@ public class Sketcher extends Application {
 	private final static int LINE = 0;
 	private final static int SQUARE = 1;
 	private final static int DISK = 2;
+	private final static int SMILEY = 3;
 
 	private int currentTool = LINE;
 	private Color currentColor = Color.RED;
+	
+	private Image smiley = new Image("smiley.png");
 
 	private void doMouseDown(double x, double y) {
 		prevX = x; // Just save the starting position.
@@ -38,6 +42,9 @@ public class Sketcher extends Application {
 		MenuBar menuBar = new MenuBar();
 
 		Menu controlMenu = new Menu("Control");
+		MenuItem clearItem = new MenuItem("Clear");
+		clearItem.setOnAction(e -> clear());
+		controlMenu.getItems().add(clearItem);
 		MenuItem quitItem = new MenuItem("Quit");
 		quitItem.setOnAction(e -> System.exit(0));
 		controlMenu.getItems().add(quitItem);
@@ -52,6 +59,12 @@ public class Sketcher extends Application {
 		colorMenu.getItems().add(colorItem);
 		colorItem = new MenuItem("Blue");
 		colorItem.setOnAction(e -> currentColor = Color.BLUE);
+		colorMenu.getItems().add(colorItem);
+		colorItem = new MenuItem("Purple");
+		colorItem.setOnAction(e -> currentColor = Color.PURPLE);
+		colorMenu.getItems().add(colorItem);
+		colorItem = new MenuItem("Orange");
+		colorItem.setOnAction(e -> currentColor = Color.ORANGE);
 		colorMenu.getItems().add(colorItem);
 		colorItem = new MenuItem("Random");
 		colorItem.setOnAction(e -> currentColor = null);
@@ -76,14 +89,23 @@ public class Sketcher extends Application {
 		RadioButton diskBtn = new RadioButton("Disk");
 		diskBtn.setOnAction(e -> currentTool = DISK);
 		diskBtn.setToggleGroup(grp);
+		
+		RadioButton smileyBtn = new RadioButton("Smiley");
+		smileyBtn.setOnAction(e -> currentTool = SMILEY);
+		smileyBtn.setToggleGroup(grp);
 
 		TilePane bottom = new TilePane(5, 5);
 		bottom.getChildren().add(new Label("Draw using: "));
-		bottom.getChildren().addAll(lineBtn, squareBtn, diskBtn);
+		bottom.getChildren().addAll(lineBtn, squareBtn, diskBtn, smileyBtn);
 		bottom.setStyle("-fx-padding: 5px; -fx-border-color: black; -fx-border-width: 2px 0 0 0");
 		return bottom;
 	}
 
+	private void clear() {
+		g.setFill(Color.WHITE);
+		g.fillRect(0, 0, 800, 600);
+	}
+	
 	private void putShape(double x, double y) {
 		if (currentColor == null) {
 			g.setFill(Color.hsb(360 * Math.random(), 0.8, 1));
@@ -98,12 +120,14 @@ public class Sketcher extends Application {
 		} else if (currentTool == DISK) {
 			g.fillOval(x - 15, y - 15, 30, 30);
 			g.strokeOval(x - 15, y - 15, 30, 30);
+		} else if (currentTool == SMILEY) {
+			g.drawImage(smiley, x - 20, y - 20);
 		}
 	}
 
 	private void doMouseDrag(double x, double y) {
-		double offset = Math.sqrt((x - prevX) * (x - prevX) + (y - prevY) * (y - prevY));
-		if (offset < 5) {
+		double offset = Math.sqrt((x - prevX)*(x - prevX) + (y - prevY)*(y - prevY));
+		if (offset < 5 || (currentTool == SMILEY && offset < 30) ) {
 			// Don't draw anything until mouse has moved a bit.
 			return;
 		}
